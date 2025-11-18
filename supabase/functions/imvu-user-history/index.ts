@@ -152,12 +152,12 @@ serve(async (req) => {
       }
     }
 
-    // Se não encontrou histórico via activities, tentar buscar salas do usuário
+    // Se não encontrou histórico via activities, tentar buscar salas recentes do usuário
     if (roomHistory.length === 0) {
-      console.log('Tentando buscar salas do usuário diretamente...');
+      console.log('Tentando buscar salas recentes do usuário...');
       
-      const userRoomsResponse = await fetch(
-        `https://api.imvu.com/user/user-${userId}/rooms?limit=5`,
+      const recentRoomsResponse = await fetch(
+        `https://api.imvu.com/user/user-${userId}/recent_rooms?limit=5`,
         {
           method: 'GET',
           headers: {
@@ -167,9 +167,11 @@ serve(async (req) => {
         }
       );
 
-      if (userRoomsResponse.ok) {
-        const userRoomsData = await userRoomsResponse.json();
-        const rooms = userRoomsData.denormalized || {};
+      if (recentRoomsResponse.ok) {
+        const recentRoomsData = await recentRoomsResponse.json();
+        console.log('Resposta de recent_rooms:', JSON.stringify(recentRoomsData).substring(0, 500));
+        
+        const rooms = recentRoomsData.denormalized || {};
 
         for (const [key, value] of Object.entries(rooms)) {
           if (key.includes('/room/room-')) {
@@ -188,6 +190,8 @@ serve(async (req) => {
             }
           }
         }
+      } else {
+        console.error('Erro ao buscar recent_rooms:', recentRoomsResponse.status);
       }
     }
 
