@@ -10,6 +10,12 @@ interface UserInfo {
   avatarImage?: string;
   registered?: string;
   online?: boolean;
+  currentRoom?: {
+    id: string;
+    name: string;
+    description?: string;
+    privacy?: string;
+  };
 }
 
 interface RoomVisit {
@@ -140,6 +146,34 @@ export const UserHistory = ({ session }: UserHistoryProps) => {
                   </span>
                 )}
               </div>
+              
+              {userInfo.currentRoom && (
+                <div style={{
+                  marginTop: '12px',
+                  padding: '12px',
+                  background: 'rgba(76, 175, 80, 0.1)',
+                  border: '1px solid rgba(76, 175, 80, 0.3)',
+                  borderRadius: '8px'
+                }}>
+                  <div style={{ 
+                    fontSize: '0.9em', 
+                    fontWeight: 600,
+                    marginBottom: '4px',
+                    color: '#4caf50'
+                  }}>
+                    📍 Sala Atual
+                  </div>
+                  <div style={{ fontWeight: 600 }}>{userInfo.currentRoom.name}</div>
+                  {userInfo.currentRoom.description && (
+                    <div style={{ fontSize: '0.85em', opacity: 0.8, marginTop: '4px' }}>
+                      {userInfo.currentRoom.description}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '0.8em', opacity: 0.6, marginTop: '4px' }}>
+                    ID: {userInfo.currentRoom.id} • {userInfo.currentRoom.privacy === 'public' ? '🌐 Público' : '🔒 Privado'}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -28,7 +28,7 @@ serve(async (req) => {
 
     if (!session?.sauce || !session?.cid) {
       return new Response(
-        JSON.stringify({ error: 'Session inválida' }),
+        JSON.stringify({ error: 'Sessão inválida' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -80,89 +80,145 @@ serve(async (req) => {
     }
 
     console.log(`[USER-HISTORY] ID do usuário encontrado: ${userId}`);
-
-    // Buscar histórico de atividades do usuário
-    console.log(`[USER-HISTORY] Tentando buscar activity para user-${userId}`);
-    const activityResponse = await fetch(
-      `https://api.imvu.com/user/user-${userId}/activity?limit=50`,
-      {
-        method: 'GET',
-        headers: buildHeaders(session),
-      }
-    );
-
-    let roomHistory: any[] = [];
-
-    console.log(`[USER-HISTORY] Activity response status: ${activityResponse.status}`);
     
-    if (activityResponse.ok) {
-      const activityData = await activityResponse.json();
-      console.log('[USER-HISTORY] Activity data keys:', Object.keys(activityData));
-      console.log('[USER-HISTORY] Activity sample:', JSON.stringify(activityData).substring(0, 500));
-
-      // Processar atividades para encontrar visitas a salas
-      const activities = activityData.denormalized || {};
-      const roomVisits: any[] = [];
-
-      console.log(`[USER-HISTORY] Total activities entries: ${Object.keys(activities).length}`);
-
-      for (const [key, value] of Object.entries(activities)) {
-        const activity = value as any;
-        
-        // Log para debug
-        if (activity.relations?.room || activity.data?.room) {
-          console.log('[USER-HISTORY] Found room activity:', JSON.stringify(activity).substring(0, 200));
-        }
-        
-        // Verificar múltiplas formas de relacionamento com sala
-        let roomUrl = activity.relations?.room || activity.data?.room || activity.data?.current_room;
-        
-        if (roomUrl && typeof roomUrl === 'string') {
-          const roomMatch = roomUrl.match(/room-(.+)/);
-          if (roomMatch) {
-            console.log(`[USER-HISTORY] Found room: ${roomMatch[1]}`);
-            roomVisits.push({
-              roomId: roomMatch[1],
-              timestamp: activity.data?.created || activity.data?.updated || Date.now(),
-            });
-          }
-        }
-      }
-      
-      console.log(`[USER-HISTORY] Total room visits found: ${roomVisits.length}`);
-
-      // Ordenar por data mais recente e pegar as 5 últimas
-      roomVisits.sort((a, b) => b.timestamp - a.timestamp);
-      const recentRooms = roomVisits.slice(0, 5);
-
-      // Buscar detalhes de cada sala
-      for (const visit of recentRooms) {
-        try {
+    // Informações do usuário
+    const userInfo = userData.denormalized?.[userUrl];
+    let roomHistory: any[] = [];
+    let currentRoom = null;
+    
+    // Buscar current_room do usuário
+    console.log('[USER-HISTORY] Verificando current_room do usuário...');
+    try {
+      const currentRoomUrl = userInfo?.relations?.current_room;
+      if (currentRoomUrl && typeof currentRoomUrl === 'string') {
+        console.log(`[USER-HISTORY] Current room URL: ${currentRoomUrl}`);
+        const roomMatch = currentRoomUrl.match(/room-(.+)/);
+        if (roomMatch) {
+          const roomId = roomMatch[1];
           const roomResponse = await fetch(
-            `https://api.imvu.com/room/room-${visit.roomId}`,
+            `https://api.imvu.com/room/room-${roomId}`,
             {
               method: 'GET',
               headers: buildHeaders(session),
             }
           );
-
+          
           if (roomResponse.ok) {
             const roomData = await roomResponse.json();
-            const roomInfo = roomData.denormalized?.[`https://api.imvu.com/room/room-${visit.roomId}`];
+            const roomInfo = roomData.denormalized?.[`https://api.imvu.com/room/room-${roomId}`];
             
             if (roomInfo?.data) {
-              roomHistory.push({
-                id: visit.roomId,
+              console.log('[USER-HISTORY] Found current room:', roomInfo.data.name);
+              currentRoom = {
+                id: roomId,
                 name: roomInfo.data.name || 'Sala sem nome',
                 description: roomInfo.data.description || '',
-                visitedAt: new Date(visit.timestamp).toISOString(),
+                privacy: roomInfo.data.privacy || 'public',
+              };
+              
+              // Adicionar também ao histórico
+              roomHistory.push({
+                id: roomId,
+                name: roomInfo.data.name || 'Sala atual',
+                description: roomInfo.data.description || '',
+                visitedAt: new Date().toISOString(),
                 privacy: roomInfo.data.privacy || 'public',
                 rating: roomInfo.data.rating || '',
               });
             }
+          } else {
+            console.log(`[USER-HISTORY] Erro ao buscar current_room: ${roomResponse.status}`);
           }
-        } catch (error) {
-          console.error(`Erro ao buscar detalhes da sala ${visit.roomId}:`, error);
+        }
+      } else {
+        console.log('[USER-HISTORY] Usuário não está em nenhuma sala no momento');
+      }
+    } catch (error) {
+      console.error('[USER-HISTORY] Erro ao buscar current_room:', error);
+    }
+
+    // Buscar histórico de atividades do usuário (apenas se não tiver sala atual)
+    if (roomHistory.length === 0) {
+      console.log(`[USER-HISTORY] Tentando buscar activity para user-${userId}`);
+      const activityResponse = await fetch(
+        `https://api.imvu.com/user/user-${userId}/activity?limit=50`,
+        {
+          method: 'GET',
+          headers: buildHeaders(session),
+        }
+      );
+
+      console.log(`[USER-HISTORY] Activity response status: ${activityResponse.status}`);
+      
+      if (activityResponse.ok) {
+        const activityData = await activityResponse.json();
+        console.log('[USER-HISTORY] Activity data keys:', Object.keys(activityData));
+        console.log('[USER-HISTORY] Activity sample:', JSON.stringify(activityData).substring(0, 500));
+
+        // Processar atividades para encontrar visitas a salas
+        const activities = activityData.denormalized || {};
+        const roomVisits: any[] = [];
+
+        console.log(`[USER-HISTORY] Total activities entries: ${Object.keys(activities).length}`);
+
+        for (const [key, value] of Object.entries(activities)) {
+          const activity = value as any;
+          
+          // Log para debug
+          if (activity.relations?.room || activity.data?.room) {
+            console.log('[USER-HISTORY] Found room activity:', JSON.stringify(activity).substring(0, 200));
+          }
+          
+          // Verificar múltiplas formas de relacionamento com sala
+          let roomUrl = activity.relations?.room || activity.data?.room || activity.data?.current_room;
+          
+          if (roomUrl && typeof roomUrl === 'string') {
+            const roomMatch = roomUrl.match(/room-(.+)/);
+            if (roomMatch) {
+              console.log(`[USER-HISTORY] Found room: ${roomMatch[1]}`);
+              roomVisits.push({
+                roomId: roomMatch[1],
+                timestamp: activity.data?.created || activity.data?.updated || Date.now(),
+              });
+            }
+          }
+        }
+        
+        console.log(`[USER-HISTORY] Total room visits found: ${roomVisits.length}`);
+
+        // Ordenar por data mais recente e pegar as 5 últimas
+        roomVisits.sort((a, b) => b.timestamp - a.timestamp);
+        const recentRooms = roomVisits.slice(0, 5);
+
+        // Buscar detalhes de cada sala
+        for (const visit of recentRooms) {
+          try {
+            const roomResponse = await fetch(
+              `https://api.imvu.com/room/room-${visit.roomId}`,
+              {
+                method: 'GET',
+                headers: buildHeaders(session),
+              }
+            );
+
+            if (roomResponse.ok) {
+              const roomData = await roomResponse.json();
+              const roomInfo = roomData.denormalized?.[`https://api.imvu.com/room/room-${visit.roomId}`];
+              
+              if (roomInfo?.data) {
+                roomHistory.push({
+                  id: visit.roomId,
+                  name: roomInfo.data.name || 'Sala sem nome',
+                  description: roomInfo.data.description || '',
+                  visitedAt: new Date(visit.timestamp).toISOString(),
+                  privacy: roomInfo.data.privacy || 'public',
+                  rating: roomInfo.data.rating || '',
+                });
+              }
+            }
+          } catch (error) {
+            console.error(`Erro ao buscar detalhes da sala ${visit.roomId}:`, error);
+          }
         }
       }
     }
@@ -211,50 +267,6 @@ serve(async (req) => {
       }
     }
     
-    // Informações do usuário (mover para cima para usar no current_room)
-    const userInfo = userData.denormalized?.[userUrl];
-    
-    // Tentar buscar current_room se ainda não tiver histórico
-    if (roomHistory.length === 0) {
-      console.log('[USER-HISTORY] Tentando buscar current_room do usuário...');
-      try {
-        const currentRoomUrl = userInfo?.relations?.current_room;
-        if (currentRoomUrl && typeof currentRoomUrl === 'string') {
-          console.log(`[USER-HISTORY] Current room URL: ${currentRoomUrl}`);
-          const roomMatch = currentRoomUrl.match(/room-(.+)/);
-          if (roomMatch) {
-            const roomId = roomMatch[1];
-            const roomResponse = await fetch(
-              `https://api.imvu.com/room/room-${roomId}`,
-              {
-                method: 'GET',
-                headers: buildHeaders(session),
-              }
-            );
-            
-            if (roomResponse.ok) {
-              const roomData = await roomResponse.json();
-              const roomInfo = roomData.denormalized?.[`https://api.imvu.com/room/room-${roomId}`];
-              
-              if (roomInfo?.data) {
-                console.log('[USER-HISTORY] Found current room:', roomInfo.data.name);
-                roomHistory.push({
-                  id: roomId,
-                  name: roomInfo.data.name || 'Sala atual',
-                  description: roomInfo.data.description || '',
-                  visitedAt: new Date().toISOString(),
-                  privacy: roomInfo.data.privacy || 'public',
-                  rating: roomInfo.data.rating || '',
-                });
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('[USER-HISTORY] Erro ao buscar current_room:', error);
-      }
-    }
-    
     console.log(`[USER-HISTORY] Final room history count: ${roomHistory.length}`);
 
     // Montar objeto do usuário
@@ -265,6 +277,7 @@ serve(async (req) => {
       avatarImage: userInfo?.data?.avatar_image || userInfo?.data?.image,
       registered: userInfo?.data?.registered ? new Date(userInfo.data.registered * 1000).toISOString() : undefined,
       online: userInfo?.data?.online,
+      currentRoom: currentRoom,
     };
 
     return new Response(
