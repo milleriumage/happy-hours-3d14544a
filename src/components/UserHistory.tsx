@@ -59,7 +59,7 @@ export const UserHistory = ({ session }: UserHistoryProps) => {
         setRoomHistory(data.roomHistory || []);
         
         if (data.roomHistory?.length === 0) {
-          setError('Nenhum histórico de salas encontrado para este usuário');
+          setError('⚠️ Histórico não disponível: A API IMVU restringe o acesso ao histórico de atividades de outros usuários por privacidade. Você pode apenas ver seu próprio histórico.');
         }
       }
     } catch (err: any) {
@@ -149,7 +149,20 @@ export const UserHistory = ({ session }: UserHistoryProps) => {
             </h4>
             
             {roomHistory.length === 0 ? (
-              <p className="no-history">Nenhum histórico disponível</p>
+              <div className="no-history" style={{
+                background: 'rgba(255, 193, 7, 0.1)',
+                border: '1px solid rgba(255, 193, 7, 0.3)',
+                borderRadius: '8px',
+                padding: '16px',
+                marginTop: '12px'
+              }}>
+                <p style={{ margin: 0, color: '#ffc107' }}>
+                  ⚠️ A API IMVU restringe o acesso ao histórico de salas de outros usuários por questões de privacidade.
+                </p>
+                <p style={{ margin: '8px 0 0', fontSize: '0.9em', opacity: 0.8 }}>
+                  Apenas o próprio usuário pode ver seu histórico completo ao fazer login.
+                </p>
+              </div>
             ) : (
               <div className="history-list">
                 {roomHistory.map((room, index) => (
