@@ -55,7 +55,7 @@ export const Rooms: FC = () => {
         </div>
       </header>
 
-      <UserHistory session={session.token} />
+      <UserHistory session={session} />
 
       <div className="search-section">
         <div className="search-type-selector">
