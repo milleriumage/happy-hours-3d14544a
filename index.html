@@ -1,24 +1,69 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>b88100f7-94da-4b7f-b650-beaecfdae189</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
-
-    <meta property="og:title" content="b88100f7-94da-4b7f-b650-beaecfdae189" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
-
-  <body>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMVU Room Explorer</title>
+    <style>
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; background-color: #1a1a1a; color: #e0e0e0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        #root { width: 100%; }
+        * { box-sizing: border-box; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .login-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; }
+        .login-form { background: #2a2a2a; padding: 2.5rem; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); width: 100%; max-width: 400px; border: 1px solid #333; }
+        .login-form h1 { text-align: center; margin-bottom: 2rem; color: #c0c0c0; font-weight: 300; }
+        .input-group { margin-bottom: 1.5rem; }
+        .input-group label { display: block; margin-bottom: 0.5rem; color: #a0a0a0; }
+        .input-group input { width: 100%; padding: 0.8rem; background: #3a3a3a; border: 1px solid #4a4a4a; border-radius: 4px; color: #e0e0e0; font-size: 1rem; }
+        .input-group input:focus { outline: none; border-color: #715fa3; }
+        .btn { width: 100%; padding: 0.8rem; background-color: #5e4d8c; color: white; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 600; }
+        .btn:hover { background-color: #715fa3; }
+        .btn:disabled { background-color: #4a4a4a; cursor: not-allowed; }
+        .error-message { color: #ff6b6b; text-align: center; margin-top: 1rem; height: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #3a3a3a; margin-bottom: 2rem; }
+        .header h1 { margin: 0; font-weight: 400; }
+        .header .user-info { font-size: 0.9rem; color: #a0a0a0; }
+        .logout-btn { background: #4a4a4a; color: #e0e0e0; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .logout-btn:hover { background: #5a5a5a; }
+        .rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+        .room-card { background: #2a2a2a; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: transform 0.2s, box-shadow 0.2s; border: 1px solid #333; }
+        .room-card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+        .room-card-img { width: 100%; height: 160px; object-fit: cover; background-color: #3a3a3a; display: flex; align-items: center; justify-content: center; color: #555; font-style: italic; }
+        .room-card-content { padding: 1rem; }
+        .room-card-content h3 { margin: 0 0 0.5rem; font-weight: 500; }
+        .room-card-content p { margin: 0; color: #a0a0a0; font-size: 0.9rem; }
+        .spinner-container { display: flex; justify-content: center; align-items: center; padding: 2rem; }
+        .spinner { width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "dotenv": "https://aistudiocdn.com/dotenv@^17.2.3",
+    "ws": "https://aistudiocdn.com/ws@^8.18.3",
+    "axios": "https://aistudiocdn.com/axios@^1.13.2",
+    "type-fest": "https://aistudiocdn.com/type-fest@^5.2.0",
+    "tough-cookie": "https://aistudiocdn.com/tough-cookie@^6.0.0",
+    "events": "https://aistudiocdn.com/events@^3.3.0",
+    "ts-jest": "https://aistudiocdn.com/ts-jest@^29.4.5",
+    "tough-cookie-file-store": "https://aistudiocdn.com/tough-cookie-file-store@^3.2.1",
+    "fs": "https://aistudiocdn.com/fs@^0.0.1-security",
+    "jszip": "https://aistudiocdn.com/jszip@^3.10.1",
+    "commander": "https://aistudiocdn.com/commander@^14.0.2",
+    "axios-cookiejar-support": "https://aistudiocdn.com/axios-cookiejar-support@^6.0.4",
+    "image-type": "https://aistudiocdn.com/image-type@^6.0.0",
+    "typescript-json-serializer": "https://aistudiocdn.com/typescript-json-serializer@^6.0.1",
+    "@jest/globals": "https://aistudiocdn.com/@jest/globals@^30.2.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-  </body>
+</body>
 </html>

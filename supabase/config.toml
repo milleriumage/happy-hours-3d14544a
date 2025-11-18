@@ -1,0 +1,7 @@
+project_id = "zroerzpqtyygmiamzkhy"
+
+[functions.imvu-room-chat]
+verify_jwt = false
+
+[functions.imvu-user-history]
+verify_jwt = false
