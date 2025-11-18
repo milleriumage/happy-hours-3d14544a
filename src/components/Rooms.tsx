@@ -5,6 +5,7 @@ import { Room } from '../types';
 import { Spinner } from './Spinner';
 import { RoomCard } from './RoomCard';
 import { UserHistory } from './UserHistory';
+import { UserPresence } from './UserPresence';
 
 export const Rooms: FC = () => {
   const { session, logout } = useAuth();
@@ -56,6 +57,7 @@ export const Rooms: FC = () => {
       </header>
 
       <UserHistory session={session} />
+      <UserPresence session={session} />
 
       <div className="search-section">
         <div className="search-type-selector">
