@@ -7,6 +7,17 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const buildHeaders = (session: any) => {
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${session.sauce}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+  if (session?.cookies) headers['Cookie'] = session.cookies;
+  if (session?.cid) headers['X-IMVU-CID'] = String(session.cid);
+  return headers;
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -36,10 +47,7 @@ serve(async (req) => {
       `https://api.imvu.com/user?username=${encodeURIComponent(username)}`,
       {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.sauce}`,
-          'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(session),
       }
     );
 
@@ -78,10 +86,7 @@ serve(async (req) => {
       `https://api.imvu.com/user/user-${userId}/activity?limit=50`,
       {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.sauce}`,
-          'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(session),
       }
     );
 
@@ -124,10 +129,7 @@ serve(async (req) => {
             `https://api.imvu.com/room/room-${visit.roomId}`,
             {
               method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${session.sauce}`,
-                'Content-Type': 'application/json',
-              },
+              headers: buildHeaders(session),
             }
           );
 
@@ -160,10 +162,7 @@ serve(async (req) => {
         `https://api.imvu.com/user/user-${userId}/recent_rooms?limit=5`,
         {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${session.sauce}`,
-            'Content-Type': 'application/json',
-          },
+          headers: buildHeaders(session),
         }
       );
 
@@ -202,7 +201,7 @@ serve(async (req) => {
       username: userInfo?.data?.username || username,
       displayName: userInfo?.data?.display_name || username,
       avatarImage: userInfo?.data?.avatar_image || userInfo?.data?.image,
-      registered: userInfo?.data?.registered,
+      registered: userInfo?.data?.registered ? new Date(userInfo.data.registered * 1000).toISOString() : undefined,
       online: userInfo?.data?.online,
     };
 
