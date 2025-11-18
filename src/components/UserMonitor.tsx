@@ -27,8 +27,9 @@ const UserMonitor = ({ targetUsername, sauce, onClose }: UserMonitorProps) => {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
+    const sessionData = JSON.parse(sauce);
     const projectId = 'zroerzpqtyygmiamzkhy';
-    const wsUrl = `wss://${projectId}.supabase.co/functions/v1/imvu-monitor-user?username=${encodeURIComponent(targetUsername)}&sauce=${encodeURIComponent(sauce)}`;
+    const wsUrl = `wss://${projectId}.supabase.co/functions/v1/imvu-monitor-user?username=${encodeURIComponent(targetUsername)}&sauce=${encodeURIComponent(sessionData.sauce)}`;
     
     console.log('Monitoring user:', targetUsername);
     
