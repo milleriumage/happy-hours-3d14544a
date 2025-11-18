@@ -1,28 +1,32 @@
-import * as React from "react"
+import { useState, useEffect, useRef, useContext, createContext, FC, ReactNode } from 'react';
 
 export interface ToastProps {
-  title: string
-  description?: string
-  variant?: "default" | "destructive"
+  title: string;
+  description?: string;
+  variant?: "default" | "destructive";
 }
 
 interface ToastContextValue {
   toast: (props: ToastProps) => void
 }
 
-const ToastContext = React.createContext<ToastContextValue | undefined>(undefined)
+const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = React.useState<(ToastProps & { id: number })[]>([])
-  const idRef = React.useRef(0)
+interface ToastProviderProps {
+  children: ReactNode;
+}
 
-  const toast = React.useCallback((props: ToastProps) => {
-    const id = idRef.current++
-    setToasts((prev) => [...prev, { ...props, id }])
+export const ToastProvider: FC<ToastProviderProps> = ({ children }) => {
+  const [toasts, setToasts] = useState<(ToastProps & { id: number })[]>([]);
+  const idRef = useRef(0);
+
+  const toast = (props: ToastProps) => {
+    const id = idRef.current++;
+    setToasts((prev) => [...prev, { ...props, id }]);
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 5000)
-  }, [])
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  };
 
   return (
     <ToastContext.Provider value={{ toast }}>
@@ -64,9 +68,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useToast() {
-  const context = React.useContext(ToastContext)
+  const context = useContext(ToastContext);
   if (!context) {
-    throw new Error('useToast must be used within ToastProvider')
+    throw new Error('useToast must be used within ToastProvider');
   }
-  return context
+  return context;
 }
