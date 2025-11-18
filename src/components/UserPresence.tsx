@@ -26,6 +26,7 @@ export const UserPresence = ({ session }: UserPresenceProps) => {
     setError(null);
 
     try {
+      const sessionData = JSON.parse(session.token);
       const response = await fetch(
         `https://zroerzpqtyygmiamzkhy.supabase.co/functions/v1/imvu-user-presence`,
         {
@@ -35,7 +36,7 @@ export const UserPresence = ({ session }: UserPresenceProps) => {
           },
           body: JSON.stringify({
             username: session.user.username,
-            sauce: session.token,
+            sauce: sessionData.sauce,
           }),
         }
       );

@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
 import { Rooms } from './components/Rooms';
 import { Spinner } from './components/Spinner';
+import { ToastProvider } from './components/ui/toast';
 
 const AppContent: FC = () => {
   const { session, isLoading } = useAuth();
@@ -12,8 +13,10 @@ const AppContent: FC = () => {
 
 export const App: FC = () => {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ToastProvider>
   );
 };
