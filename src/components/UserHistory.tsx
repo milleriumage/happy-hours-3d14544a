@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../integrations/supabase/client';
 import { Spinner } from './Spinner';
+import { Session } from '../types';
 
 interface UserInfo {
   id: string;
@@ -21,7 +22,7 @@ interface RoomVisit {
 }
 
 interface UserHistoryProps {
-  session: any;
+  session: Session;
 }
 
 export const UserHistory = ({ session }: UserHistoryProps) => {
@@ -46,7 +47,7 @@ export const UserHistory = ({ session }: UserHistoryProps) => {
 
     try {
       const { data, error: functionError } = await supabase.functions.invoke('imvu-user-history', {
-        body: { session, username: username.trim() },
+        body: { session: JSON.parse(session.token), username: username.trim() },
       });
 
       if (functionError) throw functionError;
