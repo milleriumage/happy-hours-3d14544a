@@ -8,6 +8,7 @@ interface MonitoredUser {
     online: boolean;
     roomId?: string;
     roomName?: string;
+    roomPrivacy?: string;
     timestamp: string;
   };
 }
@@ -85,6 +86,7 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
                       online,
                       roomId: currentRoom?.id,
                       roomName: currentRoom?.name,
+                      roomPrivacy: currentRoom?.privacy,
                       timestamp: new Date().toISOString(),
                     }
                   }
@@ -213,7 +215,25 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
                       <>
                         <span style={{ color: '#10b981' }}>🟢 Online</span>
                         {user.lastSeen.roomName && (
-                          <> - 📍 {user.lastSeen.roomName}</>
+                          <div style={{ marginTop: '0.25rem' }}>
+                            📍 {user.lastSeen.roomName}
+                            {user.lastSeen.roomPrivacy && (
+                              <span style={{ 
+                                marginLeft: '0.5rem',
+                                padding: '0.125rem 0.375rem',
+                                borderRadius: '3px',
+                                background: user.lastSeen.roomPrivacy === 'public' 
+                                  ? 'rgba(34, 197, 94, 0.2)' 
+                                  : 'rgba(251, 146, 60, 0.2)',
+                                color: user.lastSeen.roomPrivacy === 'public' 
+                                  ? '#22c55e' 
+                                  : '#fb923c',
+                                fontSize: '0.65rem',
+                              }}>
+                                {user.lastSeen.roomPrivacy === 'public' ? '🌐 Pública' : '🔒 Privada'}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </>
                     ) : (
