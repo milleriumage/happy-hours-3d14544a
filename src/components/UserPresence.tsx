@@ -33,6 +33,7 @@ export const UserPresence = ({ session }: UserPresenceProps) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpyb2VyenBxdHl5Z21pYW16a2h5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzMDcxOTQsImV4cCI6MjA3ODg4MzE5NH0.o3_mgXyt5NLMEqFdhzmce5HRZIIei7wBNbNrHErS8OM',
           },
           body: JSON.stringify({
             username: session.user.username,
@@ -42,7 +43,8 @@ export const UserPresence = ({ session }: UserPresenceProps) => {
       );
 
       if (!response.ok) {
-        throw new Error('Erro ao buscar presença');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erro ao buscar presença');
       }
 
       const data = await response.json();
