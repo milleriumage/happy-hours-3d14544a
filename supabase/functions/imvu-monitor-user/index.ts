@@ -68,19 +68,24 @@ serve(async (req) => {
 
           // Get current room from relations.current_room
           let currentRoom = null;
+          let roomUsers = [];
           
-          // Extract room ID from the current_room URL in relations
+          // Log complete relations structure for debugging
+          console.log('User relations:', JSON.stringify(userInfo.relations, null, 2));
+          console.log('User data:', JSON.stringify(userInfo.data, null, 2));
+          
+          // Try multiple ways to find the current room
           const currentRoomUrl = userInfo.relations?.current_room;
-          console.log('Current room URL:', currentRoomUrl);
           
           if (currentRoomUrl) {
             // Extract room ID from URL like "https://api.imvu.com/room/room-105959787-406"
             const roomIdMatch = currentRoomUrl.match(/room-(.+)$/);
             if (roomIdMatch) {
               const roomId = roomIdMatch[1];
-              console.log('Extracted room ID:', roomId);
+              console.log('Found room ID from relations:', roomId);
               
               try {
+                // Fetch room details
                 const roomResponse = await fetch(
                   `https://api.imvu.com/room/room-${roomId}`,
                   {
@@ -93,8 +98,6 @@ serve(async (req) => {
 
                 if (roomResponse.ok) {
                   const roomData = await roomResponse.json();
-                  console.log('Room data:', JSON.stringify(roomData, null, 2));
-                  
                   const roomInfo = Object.values(roomData.denormalized).find((item: any) => 
                     item.data?.name
                   ) as any;
@@ -105,18 +108,49 @@ serve(async (req) => {
                       name: roomInfo.data.name,
                       privacy: roomInfo.data.privacy,
                       description: roomInfo.data.description,
+                      type: roomInfo.data.type,
+                      occupancy: roomInfo.data.occupancy,
+                      capacity: roomInfo.data.capacity,
                     };
-                    console.log('Current room set:', currentRoom);
+                    console.log('Room found:', currentRoom);
+
+                    // Fetch users in the room via chat endpoint
+                    try {
+                      const chatUrl = roomInfo.relations?.chat;
+                      if (chatUrl) {
+                        console.log('Fetching chat info from:', chatUrl);
+                        const chatResponse = await fetch(chatUrl, {
+                          headers: {
+                            'Authorization': `Bearer ${sauce}`,
+                            'Content-Type': 'application/json',
+                          },
+                        });
+
+                        if (chatResponse.ok) {
+                          const chatData = await chatResponse.json();
+                          console.log('Chat data received:', JSON.stringify(chatData, null, 2));
+                          
+                          // Extract users from chat data
+                          const chatInfo = Object.values(chatData.denormalized)[0] as any;
+                          if (chatInfo?.data?.users) {
+                            roomUsers = chatInfo.data.users;
+                            console.log('Found users in room:', roomUsers);
+                          }
+                        }
+                      }
+                    } catch (chatError) {
+                      console.error('Error fetching chat data:', chatError);
+                    }
                   }
                 } else {
-                  console.log('Room response not ok:', roomResponse.status);
+                  console.log('Room fetch failed with status:', roomResponse.status);
                 }
               } catch (error) {
                 console.error('Error fetching room:', error);
               }
             }
           } else {
-            console.log('No current_room found in relations');
+            console.log('No current_room in relations');
           }
 
           socket.send(JSON.stringify({
@@ -124,9 +158,10 @@ serve(async (req) => {
             data: {
               username: userInfo.data?.username,
               displayName: userInfo.data?.display_name,
-              online: userInfo.data?.online,
+              online: userInfo.data?.online || false,
               avatarImage: userInfo.data?.avatar_image,
               currentRoom,
+              roomUsers,
               timestamp: new Date().toISOString(),
             },
           }));
@@ -134,7 +169,8 @@ serve(async (req) => {
           console.log('Sent presence update:', { 
             username: userInfo.data?.username, 
             online: userInfo.data?.online,
-            currentRoom 
+            currentRoom: currentRoom ? currentRoom.name : null,
+            roomUsersCount: roomUsers.length
           });
 
         } catch (error) {
