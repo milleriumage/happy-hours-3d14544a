@@ -117,86 +117,51 @@ serve(async (req) => {
                     };
                     console.log('Room found (privacy: ' + roomInfo.data.privacy + '):', currentRoom);
 
-                    // Fetch users in the room via chat endpoint
+                    // Try to fetch users from scene endpoint (more reliable for getting occupants)
                     try {
-                      const chatUrl = roomInfo.relations?.chat;
-                      if (chatUrl) {
-                        console.log('Fetching chat info from:', chatUrl);
-                        const chatResponse = await fetch(chatUrl, {
+                      const sceneUrl = roomInfo.relations?.scene;
+                      if (sceneUrl) {
+                        console.log('Fetching scene data from:', sceneUrl);
+                        const sceneResponse = await fetch(sceneUrl, {
                           headers: {
                             'Authorization': `Bearer ${sauce}`,
                             'Content-Type': 'application/json',
                           },
                         });
 
-                        if (chatResponse.ok) {
-                          const chatData = await chatResponse.json();
-                          console.log('Full chat data structure:', JSON.stringify(chatData, null, 2));
+                        if (sceneResponse.ok) {
+                          const sceneData = await sceneResponse.json();
+                          console.log('Scene data received:', JSON.stringify(sceneData, null, 2));
                           
-                          // Try to extract users from different possible locations in the response
-                          if (chatData.denormalized) {
-                            // Look through all denormalized entries for users
-                            Object.values(chatData.denormalized).forEach((item: any) => {
-                              console.log('Checking denormalized item:', JSON.stringify(item, null, 2));
-                              
-                              // Check if this item has users array
-                              if (item.data?.users && Array.isArray(item.data.users)) {
-                                roomUsers = item.data.users;
-                                console.log('Found users in data.users:', roomUsers);
+                          // Extract users from scene data
+                          if (sceneData.denormalized) {
+                            Object.values(sceneData.denormalized).forEach((item: any) => {
+                              // Look for avatars array which contains users in the room
+                              if (item.data?.avatars && Array.isArray(item.data.avatars)) {
+                                // Extract usernames from avatar data
+                                const usernames = item.data.avatars
+                                  .map((avatar: any) => avatar.username || avatar.name)
+                                  .filter((name: string) => name);
+                                roomUsers = usernames;
+                                console.log('Found users from avatars:', roomUsers);
                               }
                               
-                              // Also check occupants field
+                              // Also check for occupants in different formats
                               if (item.data?.occupants && Array.isArray(item.data.occupants)) {
                                 roomUsers = item.data.occupants;
-                                console.log('Found users in data.occupants:', roomUsers);
-                              }
-                              
-                              // Check members field
-                              if (item.data?.members && Array.isArray(item.data.members)) {
-                                roomUsers = item.data.members;
-                                console.log('Found users in data.members:', roomUsers);
+                                console.log('Found users from occupants:', roomUsers);
                               }
                             });
                           }
-                          
-                          // If still no users found, try to get from room occupancy via members relation
-                          if (roomUsers.length === 0 && roomInfo.relations?.members) {
-                            console.log('Trying members relation:', roomInfo.relations.members);
-                            try {
-                              const membersResponse = await fetch(roomInfo.relations.members, {
-                                headers: {
-                                  'Authorization': `Bearer ${sauce}`,
-                                  'Content-Type': 'application/json',
-                                },
-                              });
-                              
-                              if (membersResponse.ok) {
-                                const membersData = await membersResponse.json();
-                                console.log('Members data:', JSON.stringify(membersData, null, 2));
-                                
-                                // Extract usernames from members data
-                                if (membersData.denormalized) {
-                                  const usernames: string[] = [];
-                                  Object.values(membersData.denormalized).forEach((member: any) => {
-                                    if (member.data?.username) {
-                                      usernames.push(member.data.username);
-                                    }
-                                  });
-                                  roomUsers = usernames;
-                                  console.log('Extracted usernames from members:', roomUsers);
-                                }
-                              }
-                            } catch (membersError) {
-                              console.error('Error fetching members:', membersError);
-                            }
-                          }
-                          
-                          console.log('Final roomUsers array:', roomUsers);
+                        } else {
+                          console.log('Scene fetch returned status:', sceneResponse.status);
                         }
                       }
-                    } catch (chatError) {
-                      console.error('Error fetching chat data:', chatError);
+                    } catch (sceneError) {
+                      console.error('Error fetching scene data:', sceneError);
                     }
+                    
+                    console.log('Final roomUsers array:', roomUsers);
                   }
                 } else {
                   const errorText = await roomResponse.text();
