@@ -65,12 +65,23 @@ serve(async (req) => {
           }
 
           const userInfo = Object.values(userData.denormalized)[0] as any;
+          
+          // Debug: Log complete user data structure
+          console.log('Complete userData:', JSON.stringify(userData, null, 2));
+          console.log('User info data:', JSON.stringify(userInfo.data, null, 2));
 
           // Get current room from user presence data
           let currentRoom = null;
           
-          // Check if user is in a room from their presence data
-          if (userInfo.data?.location?.room_id) {
+          // Try multiple potential locations for room data
+          const roomId = userInfo.data?.location?.room_id 
+            || userInfo.data?.room_id 
+            || userInfo.data?.current_room_id
+            || (userInfo.data?.online && userInfo.data?.location);
+          
+          console.log('Found room ID:', roomId);
+          
+          if (roomId) {
             const roomId = userInfo.data.location.room_id;
             console.log('Room ID from presence:', roomId);
             
