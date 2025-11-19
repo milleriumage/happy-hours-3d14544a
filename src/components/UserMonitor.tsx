@@ -9,8 +9,12 @@ interface UserPresence {
     id: string;
     name: string;
     privacy: string;
+    type?: string;
     description?: string;
+    occupancy?: number;
+    capacity?: number;
   };
+  roomUsers?: string[];
   timestamp: string;
 }
 
@@ -116,22 +120,58 @@ const UserMonitor = ({ targetUsername, sauce, onClose }: UserMonitorProps) => {
                   border: '1px solid rgba(59, 130, 246, 0.3)',
                   borderRadius: '8px',
                   padding: '1rem',
+                  marginBottom: '1rem',
                 }}>
-                  <h4 style={{ margin: '0 0 0.5rem 0' }}>📍 Sala Atual</h4>
+                  <h4 style={{ margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    📍 Sala Atual
+                    {presence.currentRoom.type === 'unlisted' && (
+                      <span style={{ fontSize: '0.75rem', background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+                        🔒 Privada
+                      </span>
+                    )}
+                  </h4>
                   <p style={{ margin: '0.25rem 0' }}>
                     <strong>Nome:</strong> {presence.currentRoom.name}
                   </p>
                   <p style={{ margin: '0.25rem 0' }}>
-                    <strong>ID:</strong> {presence.currentRoom.id}
-                  </p>
-                  <p style={{ margin: '0.25rem 0' }}>
                     <strong>Privacidade:</strong> {presence.currentRoom.privacy}
                   </p>
+                  {presence.currentRoom.occupancy !== undefined && (
+                    <p style={{ margin: '0.25rem 0' }}>
+                      <strong>Ocupação:</strong> {presence.currentRoom.occupancy}/{presence.currentRoom.capacity}
+                    </p>
+                  )}
                   {presence.currentRoom.description && (
                     <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', opacity: 0.8 }}>
                       {presence.currentRoom.description}
                     </p>
                   )}
+                </div>
+              )}
+
+              {presence.roomUsers && presence.roomUsers.length > 0 && (
+                <div style={{
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                }}>
+                  <h4 style={{ margin: '0 0 0.5rem 0' }}>👥 Usuários na Sala ({presence.roomUsers.length})</h4>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {presence.roomUsers.map((user: string, idx: number) => (
+                      <span 
+                        key={idx}
+                        style={{
+                          background: 'rgba(16, 185, 129, 0.2)',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '12px',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        {user}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
 
