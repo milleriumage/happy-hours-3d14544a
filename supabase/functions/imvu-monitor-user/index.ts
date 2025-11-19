@@ -65,62 +65,58 @@ serve(async (req) => {
           }
 
           const userInfo = Object.values(userData.denormalized)[0] as any;
-          
-          // Debug: Log complete user data structure
-          console.log('Complete userData:', JSON.stringify(userData, null, 2));
-          console.log('User info data:', JSON.stringify(userInfo.data, null, 2));
 
-          // Get current room from user presence data
+          // Get current room from relations.current_room
           let currentRoom = null;
           
-          // Try multiple potential locations for room data
-          const roomId = userInfo.data?.location?.room_id 
-            || userInfo.data?.room_id 
-            || userInfo.data?.current_room_id
-            || (userInfo.data?.online && userInfo.data?.location);
+          // Extract room ID from the current_room URL in relations
+          const currentRoomUrl = userInfo.relations?.current_room;
+          console.log('Current room URL:', currentRoomUrl);
           
-          console.log('Found room ID:', roomId);
-          
-          if (roomId) {
-            const roomId = userInfo.data.location.room_id;
-            console.log('Room ID from presence:', roomId);
-            
-            try {
-              const roomResponse = await fetch(
-                `https://api.imvu.com/room/room-${roomId}`,
-                {
-                  headers: {
-                    'Authorization': `Bearer ${sauce}`,
-                    'Content-Type': 'application/json',
-                  },
-                }
-              );
+          if (currentRoomUrl) {
+            // Extract room ID from URL like "https://api.imvu.com/room/room-105959787-406"
+            const roomIdMatch = currentRoomUrl.match(/room-(.+)$/);
+            if (roomIdMatch) {
+              const roomId = roomIdMatch[1];
+              console.log('Extracted room ID:', roomId);
+              
+              try {
+                const roomResponse = await fetch(
+                  `https://api.imvu.com/room/room-${roomId}`,
+                  {
+                    headers: {
+                      'Authorization': `Bearer ${sauce}`,
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                );
 
-              if (roomResponse.ok) {
-                const roomData = await roomResponse.json();
-                console.log('Room data:', JSON.stringify(roomData, null, 2));
-                
-                const roomInfo = Object.values(roomData.denormalized).find((item: any) => 
-                  item.data?.name
-                ) as any;
+                if (roomResponse.ok) {
+                  const roomData = await roomResponse.json();
+                  console.log('Room data:', JSON.stringify(roomData, null, 2));
+                  
+                  const roomInfo = Object.values(roomData.denormalized).find((item: any) => 
+                    item.data?.name
+                  ) as any;
 
-                if (roomInfo) {
-                  currentRoom = {
-                    id: roomId,
-                    name: roomInfo.data.name,
-                    privacy: roomInfo.data.privacy,
-                    description: roomInfo.data.description,
-                  };
-                  console.log('Current room set:', currentRoom);
+                  if (roomInfo) {
+                    currentRoom = {
+                      id: roomId,
+                      name: roomInfo.data.name,
+                      privacy: roomInfo.data.privacy,
+                      description: roomInfo.data.description,
+                    };
+                    console.log('Current room set:', currentRoom);
+                  }
+                } else {
+                  console.log('Room response not ok:', roomResponse.status);
                 }
-              } else {
-                console.log('Room response not ok:', roomResponse.status);
+              } catch (error) {
+                console.error('Error fetching room:', error);
               }
-            } catch (error) {
-              console.error('Error fetching room:', error);
             }
           } else {
-            console.log('No room_id found in user presence data')
+            console.log('No current_room found in relations');
           }
 
           socket.send(JSON.stringify({
