@@ -76,6 +76,7 @@ serve(async (req) => {
           
           // Try multiple ways to find the current room
           const currentRoomUrl = userInfo.relations?.current_room;
+          console.log('Current room URL from relations:', currentRoomUrl);
           
           if (currentRoomUrl) {
             // Extract room ID from URL like "https://api.imvu.com/room/room-105959787-406"
@@ -98,6 +99,8 @@ serve(async (req) => {
 
                 if (roomResponse.ok) {
                   const roomData = await roomResponse.json();
+                  console.log('Full room data:', JSON.stringify(roomData, null, 2));
+                  
                   const roomInfo = Object.values(roomData.denormalized).find((item: any) => 
                     item.data?.name
                   ) as any;
@@ -112,7 +115,7 @@ serve(async (req) => {
                       occupancy: roomInfo.data.occupancy,
                       capacity: roomInfo.data.capacity,
                     };
-                    console.log('Room found:', currentRoom);
+                    console.log('Room found (privacy: ' + roomInfo.data.privacy + '):', currentRoom);
 
                     // Fetch users in the room via chat endpoint
                     try {
@@ -196,7 +199,8 @@ serve(async (req) => {
                     }
                   }
                 } else {
-                  console.log('Room fetch failed with status:', roomResponse.status);
+                  const errorText = await roomResponse.text();
+                  console.log('Room fetch failed with status:', roomResponse.status, 'Error:', errorText);
                 }
               } catch (error) {
                 console.error('Error fetching room:', error);
