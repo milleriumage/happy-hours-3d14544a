@@ -66,66 +66,50 @@ serve(async (req) => {
 
           const userInfo = Object.values(userData.denormalized)[0] as any;
 
-          // Get current activity
-          const activityResponse = await fetch(
-            `https://api.imvu.com/user/user-${userId}/activity?limit=5`,
-            {
-              headers: {
-                'Authorization': `Bearer ${sauce}`,
-                'Content-Type': 'application/json',
-              },
-            }
-          );
-
+          // Get current room from user presence data
           let currentRoom = null;
-          if (activityResponse.ok) {
-            const activityData = await activityResponse.json();
-            console.log('Activity data:', JSON.stringify(activityData, null, 2));
+          
+          // Check if user is in a room from their presence data
+          if (userInfo.data?.location?.room_id) {
+            const roomId = userInfo.data.location.room_id;
+            console.log('Room ID from presence:', roomId);
             
-            const roomVisits = Object.values(activityData.denormalized).filter((item: any) => 
-              item.data?.action === 'visit_room'
-            );
-
-            console.log('Room visits found:', roomVisits.length);
-
-            if (roomVisits.length > 0) {
-              const latestVisit = roomVisits[0] as any;
-              const roomId = latestVisit.data?.room_id;
-              console.log('Latest room ID:', roomId);
-              
-              if (roomId) {
-                const roomResponse = await fetch(
-                  `https://api.imvu.com/room/room-${roomId}`,
-                  {
-                    headers: {
-                      'Authorization': `Bearer ${sauce}`,
-                      'Content-Type': 'application/json',
-                    },
-                  }
-                );
-
-                if (roomResponse.ok) {
-                  const roomData = await roomResponse.json();
-                  console.log('Room data:', JSON.stringify(roomData, null, 2));
-                  
-                  const roomInfo = Object.values(roomData.denormalized).find((item: any) => 
-                    item.data?.name
-                  ) as any;
-
-                  if (roomInfo) {
-                    currentRoom = {
-                      id: roomId,
-                      name: roomInfo.data.name,
-                      privacy: roomInfo.data.privacy,
-                      description: roomInfo.data.description,
-                    };
-                    console.log('Current room set:', currentRoom);
-                  }
+            try {
+              const roomResponse = await fetch(
+                `https://api.imvu.com/room/room-${roomId}`,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${sauce}`,
+                    'Content-Type': 'application/json',
+                  },
                 }
+              );
+
+              if (roomResponse.ok) {
+                const roomData = await roomResponse.json();
+                console.log('Room data:', JSON.stringify(roomData, null, 2));
+                
+                const roomInfo = Object.values(roomData.denormalized).find((item: any) => 
+                  item.data?.name
+                ) as any;
+
+                if (roomInfo) {
+                  currentRoom = {
+                    id: roomId,
+                    name: roomInfo.data.name,
+                    privacy: roomInfo.data.privacy,
+                    description: roomInfo.data.description,
+                  };
+                  console.log('Current room set:', currentRoom);
+                }
+              } else {
+                console.log('Room response not ok:', roomResponse.status);
               }
+            } catch (error) {
+              console.error('Error fetching room:', error);
             }
           } else {
-            console.log('Activity response not ok:', activityResponse.status);
+            console.log('No room_id found in user presence data')
           }
 
           socket.send(JSON.stringify({
