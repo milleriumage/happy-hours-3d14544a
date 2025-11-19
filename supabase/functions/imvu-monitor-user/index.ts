@@ -74,9 +74,37 @@ serve(async (req) => {
           console.log('User relations:', JSON.stringify(userInfo.relations, null, 2));
           console.log('User data:', JSON.stringify(userInfo.data, null, 2));
           
+          // Try to get presence data which may contain room info for private rooms
+          let presenceRoomUrl = null;
+          if (userInfo.relations?.presence) {
+            try {
+              console.log('Fetching presence data from:', userInfo.relations.presence);
+              const presenceResponse = await fetch(userInfo.relations.presence, {
+                headers: {
+                  'Authorization': `Bearer ${sauce}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+              
+              if (presenceResponse.ok) {
+                const presenceData = await presenceResponse.json();
+                console.log('Presence data:', JSON.stringify(presenceData, null, 2));
+                
+                // Try to extract room from presence data
+                const presenceInfo = Object.values(presenceData.denormalized)[0] as any;
+                if (presenceInfo?.relations?.room) {
+                  presenceRoomUrl = presenceInfo.relations.room;
+                  console.log('Found room in presence:', presenceRoomUrl);
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching presence:', error);
+            }
+          }
+          
           // Try multiple ways to find the current room
-          const currentRoomUrl = userInfo.relations?.current_room;
-          console.log('Current room URL from relations:', currentRoomUrl);
+          const currentRoomUrl = userInfo.relations?.current_room || presenceRoomUrl;
+          console.log('Current room URL (from relations or presence):', currentRoomUrl);
           
           if (currentRoomUrl) {
             // Extract room ID from URL like "https://api.imvu.com/room/room-105959787-406"
