@@ -128,14 +128,67 @@ serve(async (req) => {
 
                         if (chatResponse.ok) {
                           const chatData = await chatResponse.json();
-                          console.log('Chat data received:', JSON.stringify(chatData, null, 2));
+                          console.log('Full chat data structure:', JSON.stringify(chatData, null, 2));
                           
-                          // Extract users from chat data
-                          const chatInfo = Object.values(chatData.denormalized)[0] as any;
-                          if (chatInfo?.data?.users) {
-                            roomUsers = chatInfo.data.users;
-                            console.log('Found users in room:', roomUsers);
+                          // Try to extract users from different possible locations in the response
+                          if (chatData.denormalized) {
+                            // Look through all denormalized entries for users
+                            Object.values(chatData.denormalized).forEach((item: any) => {
+                              console.log('Checking denormalized item:', JSON.stringify(item, null, 2));
+                              
+                              // Check if this item has users array
+                              if (item.data?.users && Array.isArray(item.data.users)) {
+                                roomUsers = item.data.users;
+                                console.log('Found users in data.users:', roomUsers);
+                              }
+                              
+                              // Also check occupants field
+                              if (item.data?.occupants && Array.isArray(item.data.occupants)) {
+                                roomUsers = item.data.occupants;
+                                console.log('Found users in data.occupants:', roomUsers);
+                              }
+                              
+                              // Check members field
+                              if (item.data?.members && Array.isArray(item.data.members)) {
+                                roomUsers = item.data.members;
+                                console.log('Found users in data.members:', roomUsers);
+                              }
+                            });
                           }
+                          
+                          // If still no users found, try to get from room occupancy via members relation
+                          if (roomUsers.length === 0 && roomInfo.relations?.members) {
+                            console.log('Trying members relation:', roomInfo.relations.members);
+                            try {
+                              const membersResponse = await fetch(roomInfo.relations.members, {
+                                headers: {
+                                  'Authorization': `Bearer ${sauce}`,
+                                  'Content-Type': 'application/json',
+                                },
+                              });
+                              
+                              if (membersResponse.ok) {
+                                const membersData = await membersResponse.json();
+                                console.log('Members data:', JSON.stringify(membersData, null, 2));
+                                
+                                // Extract usernames from members data
+                                if (membersData.denormalized) {
+                                  const usernames: string[] = [];
+                                  Object.values(membersData.denormalized).forEach((member: any) => {
+                                    if (member.data?.username) {
+                                      usernames.push(member.data.username);
+                                    }
+                                  });
+                                  roomUsers = usernames;
+                                  console.log('Extracted usernames from members:', roomUsers);
+                                }
+                              }
+                            } catch (membersError) {
+                              console.error('Error fetching members:', membersError);
+                            }
+                          }
+                          
+                          console.log('Final roomUsers array:', roomUsers);
                         }
                       }
                     } catch (chatError) {
