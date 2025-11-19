@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.imvu-user-history]
 verify_jwt = false
+
+[functions.imvu-user-presence]
+verify_jwt = false
+
+[functions.imvu-monitor-user]
+verify_jwt = false
