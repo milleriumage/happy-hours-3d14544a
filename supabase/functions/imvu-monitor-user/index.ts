@@ -80,13 +80,18 @@ serve(async (req) => {
           let currentRoom = null;
           if (activityResponse.ok) {
             const activityData = await activityResponse.json();
+            console.log('Activity data:', JSON.stringify(activityData, null, 2));
+            
             const roomVisits = Object.values(activityData.denormalized).filter((item: any) => 
               item.data?.action === 'visit_room'
             );
 
+            console.log('Room visits found:', roomVisits.length);
+
             if (roomVisits.length > 0) {
               const latestVisit = roomVisits[0] as any;
               const roomId = latestVisit.data?.room_id;
+              console.log('Latest room ID:', roomId);
               
               if (roomId) {
                 const roomResponse = await fetch(
@@ -101,6 +106,8 @@ serve(async (req) => {
 
                 if (roomResponse.ok) {
                   const roomData = await roomResponse.json();
+                  console.log('Room data:', JSON.stringify(roomData, null, 2));
+                  
                   const roomInfo = Object.values(roomData.denormalized).find((item: any) => 
                     item.data?.name
                   ) as any;
@@ -112,10 +119,13 @@ serve(async (req) => {
                       privacy: roomInfo.data.privacy,
                       description: roomInfo.data.description,
                     };
+                    console.log('Current room set:', currentRoom);
                   }
                 }
               }
             }
+          } else {
+            console.log('Activity response not ok:', activityResponse.status);
           }
 
           socket.send(JSON.stringify({
@@ -129,6 +139,12 @@ serve(async (req) => {
               timestamp: new Date().toISOString(),
             },
           }));
+          
+          console.log('Sent presence update:', { 
+            username: userInfo.data?.username, 
+            online: userInfo.data?.online,
+            currentRoom 
+          });
 
         } catch (error) {
           console.error('Error checking presence:', error);
