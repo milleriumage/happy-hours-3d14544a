@@ -114,6 +114,7 @@ serve(async (req) => {
                 name: roomInfo.data.name || 'Sala sem nome',
                 description: roomInfo.data.description || '',
                 privacy: roomInfo.data.privacy || 'public',
+                image: roomInfo.data.image || roomInfo.data.thumbnail_url || null,
               };
               
               // Adicionar também ao histórico
@@ -124,6 +125,7 @@ serve(async (req) => {
                 visitedAt: new Date().toISOString(),
                 privacy: roomInfo.data.privacy || 'public',
                 rating: roomInfo.data.rating || '',
+                image: roomInfo.data.image || roomInfo.data.thumbnail_url || null,
               });
             }
           } else {
@@ -213,6 +215,7 @@ serve(async (req) => {
                   visitedAt: new Date(visit.timestamp).toISOString(),
                   privacy: roomInfo.data.privacy || 'public',
                   rating: roomInfo.data.rating || '',
+                  image: roomInfo.data.image || roomInfo.data.thumbnail_url || null,
                 });
               }
             }
@@ -256,6 +259,7 @@ serve(async (req) => {
                 visitedAt: new Date(room.data.created || room.data.updated || Date.now()).toISOString(),
                 privacy: room.data.privacy || 'public',
                 rating: room.data.rating || '',
+                image: room.data.image || room.data.thumbnail_url || null,
               });
             }
           }

@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.imvu-monitor-user]
 verify_jwt = false
+
+[functions.imvu-api-proxy]
+verify_jwt = false
