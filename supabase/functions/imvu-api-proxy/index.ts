@@ -34,17 +34,21 @@ serve(async (req) => {
 
     console.log(`[IMVU-API-PROXY] Action: ${action}`);
 
-    // Buscar produto
+    // Get product - handle IDs with suffixes like "120461861-965"
     if (action === 'getProduct' && productId) {
+      // Extract only the numeric part before any hyphen
+      const cleanProductId = String(productId).split('-')[0].replace(/\D/g, '');
+      console.log(`[IMVU-API-PROXY] Fetching product: ${cleanProductId} (original: ${productId})`);
+      
       const response = await fetch(
-        `https://api.imvu.com/product/product-${productId}`,
+        `https://api.imvu.com/product/product-${cleanProductId}`,
         { headers: buildHeaders(session) }
       );
 
       if (!response.ok) {
         console.error(`[IMVU-API-PROXY] Product fetch error: ${response.status}`);
         return new Response(
-          JSON.stringify({ error: 'Produto não encontrado' }),
+          JSON.stringify({ error: 'Product not found' }),
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
