@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Session } from '../types';
 import { Spinner } from './Spinner';
 import { useToast } from './ui/toast';
+import { supabase } from '../integrations/supabase/client';
 
 interface AdvancedFeaturesProps {
   session: Session;
@@ -21,24 +22,18 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
     setIsLoading(true);
     try {
       const sessionData = JSON.parse(session.token);
-      const response = await fetch(
-        `https://api.imvu.com/product/product-${productId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${sessionData.sauce}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('imvu-api-proxy', {
+        body: { 
+          session: sessionData,
+          action: 'getProduct',
+          productId: productId.trim()
+        },
+      });
 
-      if (!response.ok) throw new Error('Produto não encontrado');
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
-      const data = await response.json();
-      const product = Object.values(data.denormalized).find((item: any) => 
-        item.data?.name
-      ) as any;
-
-      setProductData(product?.data);
+      setProductData(data.product);
       toast({ title: 'Produto carregado!' });
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
@@ -53,22 +48,18 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
     setIsLoading(true);
     try {
       const sessionData = JSON.parse(session.token);
-      const response = await fetch(
-        `https://api.imvu.com/user?username=${encodeURIComponent(avatarUsername)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${sessionData.sauce}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('imvu-api-proxy', {
+        body: { 
+          session: sessionData,
+          action: 'getUser',
+          username: avatarUsername.trim()
+        },
+      });
 
-      if (!response.ok) throw new Error('Usuário não encontrado');
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
-      const data = await response.json();
-      const user = Object.values(data.denormalized)[0] as any;
-
-      setAvatarData(user?.data);
+      setAvatarData(data.user);
       toast({ title: 'Avatar carregado!' });
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
@@ -78,7 +69,7 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
   };
 
   const getOutfit = async () => {
-    if (!avatarData?.id) {
+    if (!avatarData?.id && !avatarData?.legacy_cid) {
       toast({ title: 'Busque um avatar primeiro', variant: 'destructive' });
       return;
     }
@@ -86,28 +77,24 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
     setIsLoading(true);
     try {
       const sessionData = JSON.parse(session.token);
-      const response = await fetch(
-        `https://api.imvu.com/user/user-${avatarData.id}/outfit`,
-        {
-          headers: {
-            'Authorization': `Bearer ${sessionData.sauce}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const userId = avatarData.legacy_cid || avatarData.id;
+      
+      const { data, error } = await supabase.functions.invoke('imvu-api-proxy', {
+        body: { 
+          session: sessionData,
+          action: 'getOutfit',
+          userId: userId
+        },
+      });
 
-      if (!response.ok) throw new Error('Outfit não encontrado');
-
-      const data = await response.json();
-      const outfit = Object.values(data.denormalized).filter((item: any) => 
-        item.data?.product_id
-      );
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
       toast({
-        title: `Outfit possui ${outfit.length} produtos`,
+        title: `Outfit possui ${data.outfit?.length || 0} produtos`,
         description: 'Verifique o console para detalhes',
       });
-      console.log('Outfit completo:', outfit);
+      console.log('Outfit completo:', data.outfit);
     } catch (err: any) {
       toast({ title: 'Erro', description: err.message, variant: 'destructive' });
     } finally {
@@ -150,12 +137,19 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
             borderRadius: '6px',
             marginTop: '0.5rem',
           }}>
-            <h4 style={{ margin: '0 0 0.5rem 0' }}>{productData.name}</h4>
+            {productData.product_image && (
+              <img 
+                src={productData.product_image} 
+                alt={productData.name || productData.product_name}
+                style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: '0.5rem' }}
+              />
+            )}
+            <h4 style={{ margin: '0 0 0.5rem 0' }}>{productData.name || productData.product_name}</h4>
             <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
               <strong>Criador:</strong> {productData.creator_name}
             </p>
             <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
-              <strong>Preço:</strong> {productData.price_in_credits} créditos
+              <strong>Preço:</strong> {productData.price_in_credits || productData.product_price} créditos
             </p>
             <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
               <strong>Rating:</strong> {productData.rating} ⭐
@@ -202,7 +196,7 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
                   {avatarData.display_name || avatarData.username}
                 </h4>
                 <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
-                  <strong>ID:</strong> {avatarData.id}
+                  <strong>ID:</strong> {avatarData.legacy_cid || avatarData.id}
                 </p>
                 <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
                   <strong>País:</strong> {avatarData.country || 'N/A'}

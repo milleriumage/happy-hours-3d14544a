@@ -25,6 +25,7 @@ interface RoomVisit {
   visitedAt: string;
   privacy: string;
   rating: string | number;
+  image?: string | null;
 }
 
 interface UserHistoryProps {
@@ -200,9 +201,25 @@ export const UserHistory = ({ session }: UserHistoryProps) => {
             ) : (
               <div className="history-list">
                 {roomHistory.map((room, index) => (
-                  <div key={room.id} className="history-item">
+                  <div key={room.id} className="history-item" style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
                     <div className="history-number">{index + 1}</div>
-                    <div className="history-content">
+                    {room.image && (
+                      <img 
+                        src={room.image} 
+                        alt={room.name}
+                        style={{
+                          width: '80px',
+                          height: '60px',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          flexShrink: 0
+                        }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className="history-content" style={{ flex: 1 }}>
                       <div className="history-room-info">
                         <h5 className="history-room-name">{room.name}</h5>
                         {room.description && (
