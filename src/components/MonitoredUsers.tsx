@@ -56,12 +56,12 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
           if (lastState && lastState.online !== online) {
             if (online) {
               toast({
-                title: `🟢 ${username} está online!`,
-                description: currentRoom ? `Em: ${currentRoom.name}` : 'Online agora',
+                title: `🟢 ${username} is online!`,
+                description: currentRoom ? `In: ${currentRoom.name}` : 'Online now',
               });
             } else {
               toast({
-                title: `🔴 ${username} ficou offline`,
+                title: `🔴 ${username} went offline`,
                 variant: 'destructive',
               });
             }
@@ -70,7 +70,7 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
           // Notify if room changed
           if (online && currentRoom && lastState?.roomId !== currentRoom.id) {
             toast({
-              title: `📍 ${username} entrou em uma sala`,
+              title: `📍 ${username} entered a room`,
               description: `${currentRoom.name} (${currentRoom.privacy})`,
             });
           }
@@ -101,8 +101,8 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
 
     ws.onerror = () => {
       toast({
-        title: 'Erro ao monitorar',
-        description: `Não foi possível monitorar ${username}`,
+        title: 'Monitoring error',
+        description: `Could not monitor ${username}`,
         variant: 'destructive',
       });
     };
@@ -116,7 +116,7 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
     
     if (monitoredUsers.some(u => u.username === username)) {
       toast({
-        title: 'Usuário já está sendo monitorado',
+        title: 'User is already being monitored',
         variant: 'destructive',
       });
       return;
@@ -130,8 +130,8 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
     setNewUsername('');
     
     toast({
-      title: `Monitorando ${username}`,
-      description: 'Você receberá notificações de atividade',
+      title: `Monitoring ${username}`,
+      description: 'You will receive activity notifications',
     });
   };
 
@@ -148,7 +148,7 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
     localStorage.setItem('monitored-users', JSON.stringify(updated));
     
     toast({
-      title: `Parou de monitorar ${username}`,
+      title: `Stopped monitoring ${username}`,
     });
   };
 
@@ -160,15 +160,15 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
       padding: '1.5rem',
       marginBottom: '2rem',
     }}>
-      <h2 style={{ marginTop: 0 }}>🔔 Usuários Monitorados</h2>
+      <h2 style={{ marginTop: 0 }}>🔔 Online User Checker</h2>
       <p style={{ fontSize: '0.875rem', opacity: 0.8, marginBottom: '1rem' }}>
-        Receba notificações quando ficarem online ou mudarem de sala
+        Get notifications when users come online or change rooms
       </p>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
         <input
           type="text"
-          placeholder="Nome do usuário"
+          placeholder="Username"
           value={newUsername}
           onChange={(e) => setNewUsername(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && addUser()}
@@ -176,7 +176,7 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
           style={{ flex: 1 }}
         />
         <button onClick={addUser} className="btn">
-          Adicionar
+          Add
         </button>
       </div>
 
@@ -186,7 +186,7 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
           padding: '2rem',
           opacity: 0.6,
         }}>
-          Nenhum usuário sendo monitorado
+          No users being monitored
         </div>
       ) : (
         <div style={{
@@ -230,7 +230,7 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
                                   : '#fb923c',
                                 fontSize: '0.65rem',
                               }}>
-                                {user.lastSeen.roomPrivacy === 'public' ? '🌐 Pública' : '🔒 Privada'}
+                                {user.lastSeen.roomPrivacy === 'public' ? '🌐 Public' : '🔒 Private'}
                               </span>
                             )}
                           </div>
@@ -257,7 +257,7 @@ export const MonitoredUsers = ({ session }: MonitoredUsersProps) => {
                   fontSize: '0.875rem',
                 }}
               >
-                Remover
+                Remove
               </button>
             </div>
           ))}

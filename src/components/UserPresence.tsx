@@ -71,26 +71,26 @@ export const UserPresence = ({ session }: UserPresenceProps) => {
         padding: '1.5rem',
         border: '1px solid rgba(59, 130, 246, 0.3)',
       }}>
-        <h2 style={{ marginTop: 0 }}>👥 Presença e Monitoramento</h2>
+        <h2 style={{ marginTop: 0 }}>👥 Online User Checker</h2>
         
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
           <button onClick={fetchPresence} className="btn" disabled={isLoading}>
             {isLoading && <Spinner />}
-            Ver Amigos Online
+            View Online Friends
           </button>
         </div>
 
         <form onSubmit={handleMonitorCustomUser} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
           <input
             type="text"
-            placeholder="Nome de usuário para monitorar"
+            placeholder="Username to monitor"
             value={customUsername}
             onChange={(e) => setCustomUsername(e.target.value)}
             className="search-input"
             style={{ flex: 1 }}
           />
           <button type="submit" className="btn">
-            Monitorar Usuário
+            Monitor User
           </button>
         </form>
 
@@ -98,7 +98,7 @@ export const UserPresence = ({ session }: UserPresenceProps) => {
 
         {friends.length > 0 && (
           <div style={{ marginTop: '1rem' }}>
-            <h3>Amigos ({friends.length})</h3>
+            <h3>Friends ({friends.length})</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
               {friends.map((friend) => (
                 <div

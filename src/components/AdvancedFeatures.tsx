@@ -34,9 +34,9 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
       if (data.error) throw new Error(data.error);
 
       setProductData(data.product);
-      toast({ title: 'Produto carregado!' });
+      toast({ title: 'Product loaded!' });
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -60,9 +60,9 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
       if (data.error) throw new Error(data.error);
 
       setAvatarData(data.user);
-      toast({ title: 'Avatar carregado!' });
+      toast({ title: 'Avatar loaded!' });
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +70,7 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
 
   const getOutfit = async () => {
     if (!avatarData?.id && !avatarData?.legacy_cid) {
-      toast({ title: 'Busque um avatar primeiro', variant: 'destructive' });
+      toast({ title: 'Search for an avatar first', variant: 'destructive' });
       return;
     }
 
@@ -91,12 +91,12 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
       if (data.error) throw new Error(data.error);
 
       toast({
-        title: `Outfit possui ${data.outfit?.length || 0} produtos`,
-        description: 'Verifique o console para detalhes',
+        title: `Outfit has ${data.outfit?.length || 0} products`,
+        description: 'Check console for details',
       });
-      console.log('Outfit completo:', data.outfit);
+      console.log('Full outfit:', data.outfit);
     } catch (err: any) {
-      toast({ title: 'Erro', description: err.message, variant: 'destructive' });
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -110,15 +110,15 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
       padding: '1.5rem',
       marginBottom: '2rem',
     }}>
-      <h2 style={{ marginTop: 0 }}>🚀 Recursos Avançados da API</h2>
+      <h2 style={{ marginTop: 0 }}>🚀 Advanced API Features</h2>
 
       {/* Product Search */}
       <div style={{ marginBottom: '2rem' }}>
-        <h3>📦 Buscar Produto</h3>
+        <h3>📦 Search Product</h3>
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <input
             type="text"
-            placeholder="ID do produto"
+            placeholder="Product ID (e.g. 120461861 or 120461861-965)"
             value={productId}
             onChange={(e) => setProductId(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && fetchProduct()}
@@ -127,7 +127,7 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
           />
           <button onClick={fetchProduct} className="btn" disabled={isLoading}>
             {isLoading && <Spinner />}
-            Buscar
+            Search
           </button>
         </div>
         {productData && (
@@ -146,10 +146,10 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
             )}
             <h4 style={{ margin: '0 0 0.5rem 0' }}>{productData.name || productData.product_name}</h4>
             <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
-              <strong>Criador:</strong> {productData.creator_name}
+              <strong>Creator:</strong> {productData.creator_name}
             </p>
             <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
-              <strong>Preço:</strong> {productData.price_in_credits || productData.product_price} créditos
+              <strong>Price:</strong> {productData.price_in_credits || productData.product_price} credits
             </p>
             <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
               <strong>Rating:</strong> {productData.rating} ⭐
@@ -160,11 +160,11 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
 
       {/* Avatar Info */}
       <div style={{ marginBottom: '2rem' }}>
-        <h3>👤 Info de Avatar</h3>
+        <h3>👤 Avatar Info</h3>
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <input
             type="text"
-            placeholder="Nome do usuário"
+            placeholder="Username"
             value={avatarUsername}
             onChange={(e) => setAvatarUsername(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && fetchAvatar()}
@@ -173,7 +173,7 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
           />
           <button onClick={fetchAvatar} className="btn" disabled={isLoading}>
             {isLoading && <Spinner />}
-            Buscar
+            Search
           </button>
         </div>
         {avatarData && (
@@ -199,10 +199,10 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
                   <strong>ID:</strong> {avatarData.legacy_cid || avatarData.id}
                 </p>
                 <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
-                  <strong>País:</strong> {avatarData.country || 'N/A'}
+                  <strong>Country:</strong> {avatarData.country || 'N/A'}
                 </p>
                 <p style={{ fontSize: '0.875rem', margin: '0.25rem 0' }}>
-                  <strong>Registrado:</strong>{' '}
+                  <strong>Registered:</strong>{' '}
                   {new Date(avatarData.registered * 1000).toLocaleDateString()}
                 </p>
               </div>
@@ -213,7 +213,7 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
               style={{ marginTop: '1rem' }}
               disabled={isLoading}
             >
-              Ver Outfit Completo
+              View Full Outfit
             </button>
           </div>
         )}
@@ -226,14 +226,14 @@ export const AdvancedFeatures = ({ session }: AdvancedFeaturesProps) => {
         padding: '1rem',
         fontSize: '0.875rem',
       }}>
-        <strong>💡 Recursos disponíveis:</strong>
+        <strong>💡 Available Features:</strong>
         <ul style={{ marginTop: '0.5rem', marginBottom: 0, paddingLeft: '1.5rem' }}>
-          <li>Buscar produtos e ver detalhes completos</li>
-          <li>Ver informações detalhadas de avatares</li>
-          <li>Listar outfit completo (todos os produtos)</li>
-          <li>Verificar fotos de perfil</li>
-          <li>Ver amigos e seguidores</li>
-          <li>Acessar histórico de atividades</li>
+          <li>Search products and view full details</li>
+          <li>View detailed avatar information</li>
+          <li>List complete outfit (all products)</li>
+          <li>Check profile photos</li>
+          <li>View friends and followers</li>
+          <li>Access activity history</li>
         </ul>
       </div>
     </div>
